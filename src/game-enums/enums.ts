@@ -8,6 +8,11 @@ export enum EventType {
     FANCY,
     EXTRA_FANCY,
     MENU,
+    CYCLE_SQUAD,
+    EXAMINE_START,
+    TARGETING_START,
+    TARGETING_END,
+    TARGETING_MOVE,
 }
 
 export enum EntityType {
@@ -18,11 +23,13 @@ export enum EntityType {
 export enum TerrainType {
     WALL,
     FLOOR,
+    DOOR_CLOSED,
 }
 
 export enum ActorType {
-    HERO,
+    PLAYER,
     ARCHITECT,
+    HERO,
     MOB,
 }
 
@@ -30,4 +37,26 @@ export enum VisionSource {
     NoVision,
     Self,
     Remote,
+}
+
+export enum TargetingType {
+    Examine,
+    Throw,
+}
+
+export enum InputHandlerType {
+    Core,
+    Targeting,
+}
+
+export enum StatName {
+    Health,
+    Stamina,
+    Charges,
+}
+
+export enum AbilityType {
+    Camp,
+    Musket,
+    Defend,
 }

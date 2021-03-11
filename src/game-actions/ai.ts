@@ -1,6 +1,6 @@
 import * as ROT from 'rot-js'
 import * as Bones from '../bones'
-import { InputResponse } from '../game-engine';
+import { InputResponse, Game } from '../game-engine';
 import { GameEvent } from '../game-engine/events';
 import { ActorType } from '../game-enums/enums';
 
@@ -18,7 +18,11 @@ export function getEventOnMonsterTurn(game: Bones.Engine.Game, actor: Bones.Enti
         let targets : Bones.Entities.Actor[] = potential_targets.sort((a, b) => {
             let dist_me_to_a = Bones.Utils.dist2d(actor.location, a.xy)
             let dist_me_to_b = Bones.Utils.dist2d(actor.location, b.xy)
-            return dist_me_to_b - dist_me_to_a
+            if (dist_me_to_a == dist_me_to_b) {
+                return a.entity.id - b.entity.id
+            } else {
+                return dist_me_to_a - dist_me_to_b
+            }
         }).map(item => { return item.entity })
 
         if (targets.length == 0) {
@@ -28,10 +32,11 @@ export function getEventOnMonsterTurn(game: Bones.Engine.Game, actor: Bones.Enti
         } else {
             // we DO see someone
             let target = targets[0]
-
+            
             // let's see if we can attack them
             let in_melee_range = Bones.Utils.dist2d(actor.location, target.location) == 1
-            
+            // console.log(targets)
+            // console.log(target, in_melee_range)
             if (in_melee_range) {
                 // attack!
                 mob_event  = {validInput: true, actualEvent: new GameEvent(actor, Bones.Enums.EventType.ATTACK, true, {from_xy: actor.location, to_xy: target.location, target: target})}
@@ -70,7 +75,7 @@ export function getEventOnMonsterTurn(game: Bones.Engine.Game, actor: Bones.Enti
 
 export function execGameTick(game: Bones.Engine.Game, actor: Bones.Entities.Actor) : boolean {
     let region = game.current_region
-
+    
     // are the monsters all gone?
     let found_mobs = game.current_region.actors.getAllEntities().filter((mob) => { return mob.actorType == ActorType.MOB })
     if (found_mobs.length == 0) {
@@ -89,14 +94,17 @@ export function execGameTick(game: Bones.Engine.Game, actor: Bones.Entities.Acto
     }
 
     // did the player die??
-    let found_player = game.current_region.actors.getAllEntities().filter((mob) => { return mob instanceof Bones.Entities.PlayerActor })
-    if (found_player.length == 0) {
+    let found_heroes = game.current_region.actors.getAllEntities().filter((mob) => { return mob.actorType == ActorType.HERO })
+    if (found_heroes.length == 0) {
         // bring the player back
-
+        let new_squaddie = new Bones.Entities.PlayerActor(Bones.Definitions.Actors.HERO)
         let safe_xys = ROT.RNG.shuffle(region.getWalkableTerrainWithoutActors())
         let safe_xy = safe_xys.pop()
-        region.actors.setAt(safe_xy, game.player)
-        game.scheduler.add(game.player, true) // need to add to scheduler manually since we already started the region
+        region.actors.setAt(safe_xy, new_squaddie)
+        game.display.drawPoint(safe_xy)
+        game.player_squad = [new_squaddie]
+        game.active_squad_index = 0
+        // game.scheduler.add(game.player, true) // need to add to scheduler manually since we already started the region
     }
 
     return true

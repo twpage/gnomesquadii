@@ -1,6 +1,7 @@
+import * as ROT from 'rot-js'
 import * as Bones from '../bones'
 import { InputResponse } from './input-handlers'
-import { ActorType, EventType } from '../game-enums/enums'
+import { EventType, TargetingType } from '../game-enums/enums'
 
 export interface IEventData {
     direction_xy?: Bones.Coordinate
@@ -8,6 +9,7 @@ export interface IEventData {
     from_xy?: Bones.Coordinate
     to_xy?: Bones.Coordinate
     errMsg?: string
+    targetingType?: TargetingType
 }
 
 export class GameEvent {
@@ -30,19 +32,52 @@ export async function processEvents(game: Bones.Engine.Game): Promise<boolean>{
 async function processEvent(game: Bones.Engine.Game, event: GameEvent) : Promise<boolean>  {
     let actor = event.actor
     let event_type = event.event_type
-    console.log(`running event ${Bones.Enums.EventType[event_type]} for ${actor.name} on turn #${actor.turn_count}`)
+    console.log(`running event ${Bones.Enums.EventType[event_type]} for ${actor.name} on turn #${actor.turn_count} (Ends Turn: ${event.endsTurn})`)
+
+    // see if we can run this
+    
+    if ((event.actor.isPlayerControlled()) && (event.actor.actorType == Bones.Enums.ActorType.HERO) && (event.endsTurn)) {
+        let actor_relative_timedist = Bones.Actions.Squad.calcActorRelativeTimeDist(game, actor)
+        if (actor_relative_timedist >= Bones.Config.RELATIVE_TIMEDIST_MAX) {
+            console.log(`${event.actor.name} is blocked from moving too far away`)
+            game.addEventToQueue(new GameEvent(event.actor, EventType.NONE, false))
+            return Promise.resolve(true)
+        }
+    }
 
     switch (event_type) {
         case EventType.WAIT:
-            if (actor.isPlayerControlled()) {
-                console.log("you wait")
-            }
+            // if (actor.isPlayerControlled()) {
+            //     console.log("you wait")
+            // }
             break
 
         case EventType.MOVE:
             Bones.Actions.Movement.execMove(game, actor, event.eventData.from_xy, event.eventData.to_xy)
             break
         
+        case EventType.CYCLE_SQUAD:
+            let new_index = ROT.Util.mod(game.active_squad_index + 1, game.player_squad.length)
+            game.active_squad_index = new_index
+            game.display.drawAll()
+            break
+
+        case EventType.TARGETING_START:
+            let start_xy = event.actor.location
+            let end_xy = start_xy.add(event.eventData.to_xy)
+            Bones.Actions.Targeting.execTargetingStart(game, event.actor, event.eventData.targetingType, start_xy, end_xy)
+            break
+
+        case EventType.TARGETING_MOVE:
+            let new_target_xy = game.tgt_interface.target_xy.add(event.eventData.direction_xy)
+            // console.log(game.tgt_interface.target_xy, event.eventData.direction_xy)
+            Bones.Actions.Targeting.execTargetingMove(game, event.actor, new_target_xy)
+            break
+    
+        case EventType.TARGETING_END:
+            Bones.Actions.Targeting.execTargetingEnd(game, event.actor)
+            break
+
         case EventType.ATTACK:
             let target = event.eventData.target
             Bones.Actions.Combat.execAttack(game, actor, event.eventData.from_xy, event.eventData.to_xy, target)
@@ -82,8 +117,18 @@ async function processEvent(game: Bones.Engine.Game, event: GameEvent) : Promise
             console.log("unknown event type")
     }
 
+
     if (event.endsTurn) {
         actor.turn_count += 1
+
+        if (
+            (actor.isPlayerControlled()) &&
+            (!(actor.isSameAs(game.player)))
+        ) {
+            // console.log('got ending turn for player-cintroller actor')
+            game.addEventToQueue(new GameEvent(game.player, EventType.NONE, true))
+        }
+    
         return Promise.resolve(true)
     } else {
         return Promise.resolve(false)
@@ -109,56 +154,39 @@ function runFancyAnimation(words: string = "*") : Promise<boolean> {
 export function convertPlayerInputToEvent(game: Bones.Engine.Game, actor: Bones.Entities.Actor, ir: InputResponse) : GameEvent {
     let intended_event : GameEvent
     let region = game.current_region
+    let active_actor = game.getActiveSquadMember()
 
     switch (ir.event_type) {
         case EventType.WAIT:
-            intended_event = new GameEvent(actor, ir.event_type, true)
+            intended_event = new GameEvent(active_actor, ir.event_type, true)
             break
+
         case EventType.ATTEMPT_MOVE:
             let dir_xy = ir.eventData.direction_xy
-            let new_xy = actor.location.add(dir_xy)
-            
-            // first see if it is a valid coordinate
-            let is_valid_coord = region.isValid(new_xy)
-            if (is_valid_coord) {
-
-                // is there a monster there?
-                let mob_at = region.actors.getAt(new_xy)
-                if (mob_at) {
-                    intended_event = new GameEvent(actor, EventType.ATTACK, true, {
-                        target: mob_at,
-                        from_xy: actor.location.clone(),
-                        to_xy: new_xy
-                    })
-                } else {
-                    // no monster there, just attempt regular movement
-                    let is_valid = Bones.Actions.Movement.isValidMove(game, actor, new_xy)
-                    if (is_valid) {
-                        let eventData: IEventData = {
-                            from_xy: actor.location.clone(),
-                            to_xy: new_xy
-                        }
-                        intended_event = new GameEvent(actor, EventType.MOVE, true, eventData)
-                    } else {
-                        intended_event = new GameEvent(actor, EventType.NONE, false, {errMsg: "You can't move there"})
-                    }
-                }
-
-            } else {
-                intended_event = new GameEvent(actor, EventType.NONE, false, {errMsg: "There's nothing there"})
-            }
+            intended_event = Bones.Actions.Movement.getEventFromAttemptedMove(game, active_actor, dir_xy)
 
             break
         
+        case EventType.EXAMINE_START:
+            let target_xy = new Bones.Coordinate(0, 0)
+            intended_event = new GameEvent(active_actor, EventType.TARGETING_START, false, {to_xy: target_xy, targetingType: TargetingType.Examine})
+            break
+
+        case EventType.TARGETING_MOVE:
+            intended_event = new GameEvent(active_actor, ir.event_type, false, ir.eventData)
+            break
+
         // stack up these "pass through" events
+        case EventType.CYCLE_SQUAD:
         case EventType.MENU:
         case EventType.FANCY:
         case EventType.EXTRA_FANCY:
-            intended_event = new GameEvent(actor, ir.event_type, false)
+        case EventType.TARGETING_END:
+            intended_event = new GameEvent(active_actor, ir.event_type, false)
             break
         
         default:
-            intended_event = new GameEvent(actor, EventType.NONE, false)
+            intended_event = new GameEvent(active_actor, EventType.NONE, false)
     }
 
     return intended_event

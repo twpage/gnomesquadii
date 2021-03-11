@@ -32,6 +32,33 @@ function createAllowVisionFn(game: Bones.Engine.Game, actor: Bones.Entities.Acto
 
     return fn_allow_vision
 }
+export function setSquadFieldOfViewFor(game: Bones.Engine.Game, actor: Bones.Entities.Actor) : Bones.Coordinate[] {
+    let old_fov : Array<Bones.Coordinate> = actor.fov.getAllCoordinates()
+
+    actor.clearFov()
+    actor.clearKnowledge()
+    actor.clearMemory()
+
+    for (let i = 0; i < game.player_squad.length; i++) {
+        let squad_member = game.player_squad[i]
+        updateFieldOfViewFor(game, squad_member)
+        for (let fov of squad_member.fov.getAllCoordinatesAndEntities()) {
+            actor.fov.setAt(fov.xy, fov.entity)
+        }
+        for (let knows of squad_member.knowledge.getAllCoordinatesAndEntities()) {
+            actor.knowledge.setAt(knows.xy, knows.entity)
+        }
+        for (let memory of squad_member.memory.getAllCoordinatesAndEntities()) {
+            actor.memory.setAt(memory.xy, memory.entity)
+        }
+    }
+
+    let old_fov_coords = new CoordinateArea(old_fov)
+    let new_fov_coords = new CoordinateArea(actor.fov.getAllCoordinates())
+    let diff_xy_list = old_fov_coords.getSymmetricDiff(new_fov_coords).getCoordinates()
+
+    return diff_xy_list
+}
 
 export function updateFieldOfViewFor(game: Bones.Engine.Game, actor: Bones.Entities.Actor) : Bones.Coordinate[] {
     let old_fov : Array<Bones.Coordinate> = actor.fov.getAllCoordinates()
@@ -42,7 +69,7 @@ export function updateFieldOfViewFor(game: Bones.Engine.Game, actor: Bones.Entit
 
     let region = game.current_region
 
-    let fn_allow_vision = createAllowVisionFn(game, actor, Math.max(Bones.Config.viewableSize.width, Bones.Config.viewableSize.height))//actor.sight_range)
+    let fn_allow_vision = createAllowVisionFn(game, actor, Math.max(Bones.Config.gameplaySize.width, Bones.Config.gameplaySize.height))//actor.sight_range)
 
     let alternative_fov_coords = new CoordinateArea()
 

@@ -27,6 +27,11 @@ export interface ISize {
     height: number
 }
 
+export interface IRect {
+    size: ISize
+    topleft_xy : Coordinate
+}
+
 export function dist2d(from_xy: Coordinate, to_xy: Coordinate) : number {
     let xdiff = (from_xy.x - to_xy.x)
     let ydiff = (from_xy.y - to_xy.y)

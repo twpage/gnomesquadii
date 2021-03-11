@@ -19,6 +19,10 @@ export class Entity implements IEntityDefinition {
         this.code = entity_def.code
         this.location = entity_def.location
     }
+
+    isSameAs(other_entity: Entity) : boolean {
+        return this.id == other_entity.id
+    }
 }
 
 export interface IEntityDefinition {

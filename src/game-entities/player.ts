@@ -1,6 +1,5 @@
 import * as Bones from '../bones'
-import { ActorType } from '../game-enums/enums'
-import { Actor, IActorDefinition } from './actor'
+import { Actor } from './actor'
 
 export class PlayerActor extends Actor {
     // constructor (actor_def : IActorDefinition) {

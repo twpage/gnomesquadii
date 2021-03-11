@@ -1,3 +1,6 @@
 export * as AI from './ai'
 export * as Movement from './movement'
 export * as Combat from './combat'
+export * as Squad from './squad'
+export * as Targeting from './targeting'
+export { Ability } from './abilities'

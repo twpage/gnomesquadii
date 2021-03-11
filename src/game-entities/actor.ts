@@ -11,8 +11,12 @@ export class Actor extends Entity implements IActorDefinition {
     // memory_archive : IMemoryArchive = {}
     public memory : GridOfEntities<Bones.Entities.Entity>
     public knowledge : GridOfEntities<Bones.Entities.Actor>
-
+    hp_num : number
+    stamina_num : number
+    hp : Bones.Stat
+    stamina : Bones.Stat
     lastStepOffset : Bones.Coordinate
+    abilities : Array<Bones.Actions.Ability>
 
     constructor (actor_def : IActorDefinition) {
         super(actor_def)
@@ -23,6 +27,15 @@ export class Actor extends Entity implements IActorDefinition {
         this.clearFov()
         this.clearKnowledge()
         this.clearMemory()
+
+        this.hp = new Bones.Stat(Bones.Enums.StatName.Health, actor_def.hp_num)
+        if (actor_def.stamina_num) {
+            this.stamina = new Bones.Stat(Bones.Enums.StatName.Stamina, actor_def.stamina_num)
+        } else {
+            this.stamina = new Bones.Stat(Bones.Enums.StatName.Stamina, 0)
+        }
+
+        this.abilities = []
     }
 
     act (game: Bones.Engine.Game) : Promise<Bones.Engine.InputResponse> {
@@ -54,4 +67,6 @@ export class Actor extends Entity implements IActorDefinition {
 export interface IActorDefinition extends IEntityDefinition {
     actorType : ActorType,
     name: string,
+    hp_num: number,
+    stamina_num?: number,
 }
