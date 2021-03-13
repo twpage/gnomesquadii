@@ -35,15 +35,19 @@ async function processEvent(game: Bones.Engine.Game, event: GameEvent) : Promise
     console.log(`running event ${Bones.Enums.EventType[event_type]} for ${actor.name} on turn #${actor.turn_count} (Ends Turn: ${event.endsTurn})`)
 
     // see if we can run this
-    
-    if ((event.actor.isPlayerControlled()) && (event.actor.actorType == Bones.Enums.ActorType.HERO) && (event.endsTurn)) {
-        let actor_relative_timedist = Bones.Actions.Squad.calcActorRelativeTimeDist(game, actor)
-        if (actor_relative_timedist >= Bones.Config.RELATIVE_TIMEDIST_MAX) {
-            console.log(`${event.actor.name} is blocked from moving too far away`)
-            game.addEventToQueue(new GameEvent(event.actor, EventType.NONE, false))
-            return Promise.resolve(true)
-        }
+    let ok_to_proceed = Bones.Actions.Squad.checkForAllowedSquadMemberEvent(game, actor, event)
+    if (!(ok_to_proceed)) {
+        game.addEventToQueue(new GameEvent(event.actor, EventType.NONE, false))
+        return Promise.resolve(true)
     }
+    // if ((event.actor.isPlayerControlled()) && (event.actor.actorType == Bones.Enums.ActorType.HERO) && (event.endsTurn)) {
+    //     let actor_relative_timedist = Bones.Actions.Squad.calcActorRelativeTimeDist(game, actor)
+    //     if (actor_relative_timedist >= Bones.Config.RELATIVE_TIMEDIST_MAX) {
+    //         console.log(`${event.actor.name} is blocked from moving too far away`)
+    //         game.addEventToQueue(new GameEvent(event.actor, EventType.NONE, false))
+    //         return Promise.resolve(true)
+    //     }
+    // }
 
     switch (event_type) {
         case EventType.WAIT:
