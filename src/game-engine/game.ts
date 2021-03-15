@@ -25,15 +25,7 @@ export class Game {
         this.player = new Bones.Entities.PlayerActor(Bones.Definitions.Actors.PLAYER)
         this.architect = new Bones.Entities.Actor(Bones.Definitions.Actors.ARCHITECT)
 
-        this.player_squad = [
-            new Bones.Entities.PlayerActor(Bones.Definitions.Actors.HERO),
-            new Bones.Entities.PlayerActor(Bones.Definitions.Actors.HERO),
-            new Bones.Entities.PlayerActor(Bones.Definitions.Actors.HERO)
-        ]
-        this.active_squad_index = 0
-        this.player_squad[0].name = "Griz"
-        this.player_squad[1].name = "DotCom"
-        this.player_squad[2].name = "Tracy"
+        this.initPlayerSquad()
 
         this.cameraOffset = new Bones.Coordinate(0, 0)
 
@@ -219,5 +211,23 @@ export class Game {
         return (!(camera_xy.compare(old_camera_xy)))
 
         
+    }
+
+    initPlayerSquad() {
+        this.player_squad = [
+            new Bones.Entities.PlayerActor(Bones.Definitions.Actors.HERO),
+            new Bones.Entities.PlayerActor(Bones.Definitions.Actors.HERO),
+            new Bones.Entities.PlayerActor(Bones.Definitions.Actors.HERO)
+        ]
+        this.active_squad_index = 0
+        this.player_squad[0].name = "Griz"
+        this.player_squad[1].name = "DotCom"
+        this.player_squad[2].name = "Tracy"
+
+        for (let i = 0; i < this.player_squad.length; i++) {
+              this.player_squad[i].abilities.push(new Bones.Actions.Ability(Bones.Enums.AbilityType.Musket))
+              this.player_squad[i].abilities.push(new Bones.Actions.Ability(Bones.Enums.AbilityType.Dash))
+              this.player_squad[i].abilities.push(new Bones.Actions.Ability(Bones.Enums.AbilityType.Camp))
+        }
     }
 }

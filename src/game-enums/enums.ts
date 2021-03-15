@@ -58,5 +58,5 @@ export enum StatName {
 export enum AbilityType {
     Camp,
     Musket,
-    Defend,
+    Dash,
 }

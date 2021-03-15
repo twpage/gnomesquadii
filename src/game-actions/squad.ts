@@ -24,7 +24,7 @@ function getTimeDistValuesForSquad(game: Bones.Engine.Game) : ITimeDistForSquadM
             xy: a.location
         })
     }
-    console.log(timedistvalues_lst)
+    // console.log(timedistvalues_lst)
     return timedistvalues_lst
 }
 
@@ -43,7 +43,7 @@ function getPredictedTimeDistValuesForSquad(game: Bones.Engine.Game, actor: Bone
         }
     }
 
-    console.log(predicted_squad_timediff_values)
+    // console.log(predicted_squad_timediff_values)
     return predicted_squad_timediff_values
 }
 
@@ -136,7 +136,9 @@ function dist3d(from_xy: Bones.Coordinate, from_turns: number, to_xy: Bones.Coor
 }
 
 export function checkForAllowedSquadMemberEvent(game: Bones.Engine.Game, actor: Bones.Entities.Actor, event: GameEvent) : boolean {
+    // console.log(`checking for allowed: ${actor.name}`)
     if ((event.actor.isPlayerControlled()) && (event.actor.actorType == Bones.Enums.ActorType.HERO) && (event.endsTurn)) {
+        // console.log(`is player controlled : ${actor.name}`)
         let actor_relative_timedist = Bones.Actions.Squad.calcActorRelativeTimeDist(game, actor)
         if (actor_relative_timedist >= Bones.Config.RELATIVE_TIMEDIST_MAX) {
             // actor is currently outside of bounds for time-distance, but maybe this move makes it better
@@ -144,19 +146,16 @@ export function checkForAllowedSquadMemberEvent(game: Bones.Engine.Game, actor: 
             if (event.event_type == Bones.Enums.EventType.MOVE) {
 
                 let predicted_relative_timedist = calcPredictedActorRelativeTimeDist(game, actor, event.eventData.to_xy)
-                console.log(`actual: ${actor_relative_timedist} ${actor.location} vs predicted: ${predicted_relative_timedist} ${event.eventData.to_xy}`)
+                // console.log(`actual: ${actor_relative_timedist} ${actor.location} vs predicted: ${predicted_relative_timedist} ${event.eventData.to_xy}`)
                 return predicted_relative_timedist < actor_relative_timedist
             }
             
-            console.log(`${event.actor.name} is blocked from moving too far away`)
+            // console.log(`${event.actor.name} is blocked from moving too far away`)
             return false
-
-        } else {
-
-            return true
         }
-    } else {
-        // not a player controlled thing
-        return false
     }
+
+    // not a player controlled thing
+    return true
+
 }

@@ -142,7 +142,6 @@ export class Display {
     }
 
     drawInfoPanel() {
-        let text : string
         let chr : string
         let xy : Bones.Coordinate
         let max_width : number
@@ -157,13 +156,16 @@ export class Display {
                 let actor = known_actors[row_number]
                 
                 // sync indicator
-                let actor_relative_timedist = Bones.Actions.Squad.calcActorRelativeTimeDist(this.game, actor)
-                xy = Bones.Config.infoPanelRect.topleft_xy.add(new Bones.Coordinate(0, row_number))
-                if (actor_relative_timedist >= Bones.Config.RELATIVE_TIMEDIST_MAX) {
-                    this.rotMainDisplay.draw(xy.x, xy.y, '!', ROT.Color.toHex(Bones.Color.white), ROT.Color.toHex(Bones.Color.red))
-                } else if (actor_relative_timedist >= Bones.Config.RELATIVE_TIMEDIST_WARN) {
-                    this.rotMainDisplay.draw(xy.x, xy.y, '!', ROT.Color.toHex(Bones.Color.default_bg), ROT.Color.toHex(Bones.Color.yellow))
+                if (actor.isPlayerControlled()) {
+                    let actor_relative_timedist = Bones.Actions.Squad.calcActorRelativeTimeDist(this.game, actor)
+                    xy = Bones.Config.infoPanelRect.topleft_xy.add(new Bones.Coordinate(0, row_number))
+                    if (actor_relative_timedist >= Bones.Config.RELATIVE_TIMEDIST_MAX) {
+                        this.rotMainDisplay.draw(xy.x, xy.y, '!', ROT.Color.toHex(Bones.Color.white), ROT.Color.toHex(Bones.Color.red))
+                    } else if (actor_relative_timedist >= Bones.Config.RELATIVE_TIMEDIST_WARN) {
+                        this.rotMainDisplay.draw(xy.x, xy.y, '!', ROT.Color.toHex(Bones.Color.default_bg), ROT.Color.toHex(Bones.Color.yellow))
+                    }
                 }
+
                 // name
                 xy = Bones.Config.infoPanelRect.topleft_xy.add(new Bones.Coordinate(1, row_number))
                 max_width = 10
@@ -212,7 +214,12 @@ export class Display {
         let row_number = 0
         let chr : string
         let text : string
-
+        let active_squaddie : Bones.Entities.Actor
+        this.clearRect({ topleft_xy: Bones.Config.footerPanelRect.topleft_xy, size: { width: Bones.Config.footerPanelRect.size.width, height: 1}}, Bones.Color.slate_65pc)
+        text = ""
+        for (let i = 0; i < )
+        // line 2
+        row_number = 1
         if (this.game.tgt_interface) {
             text = this.game.tgt_interface.target_xy.toString()
         } else {
