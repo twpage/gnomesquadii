@@ -15,6 +15,14 @@ export const hero_color: ROTColor = [255, 255, 0]
 export const red : ROTColor = [255, 0, 0]
 export const yellow : ROTColor = [255, 255, 0]
 
-export const slate_65pc : ROTColor = [148, 184, 184]
-export const slate_40pc : ROTColor = [82, 122, 122]
-export const slate_20pc : ROTColor = [41, 61, 61]
+export const slate_light : ROTColor = [148, 184, 184]
+export const slate_med : ROTColor = [82, 122, 122]
+export const slate_dark : ROTColor = [41, 61, 61]
+
+export const compl_light : ROTColor = [255, 228, 205]
+export const compl_med : ROTColor = [246, 202, 165]
+export const compl_dark : ROTColor = [204, 149, 103]
+
+export const targeting_target = compl_med
+export const targeting_path = compl_light
+export const targeting_bad = red

@@ -16,7 +16,7 @@ export class Actor extends Entity implements IActorDefinition {
     hp : Bones.Stat
     stamina : Bones.Stat
     lastStepOffset : Bones.Coordinate
-    abilities : Array<Bones.Actions.Ability>
+    abilities : Array<Bones.Actions.Abilities.Ability>
 
     constructor (actor_def : IActorDefinition) {
         super(actor_def)

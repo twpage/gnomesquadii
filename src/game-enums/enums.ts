@@ -11,8 +11,10 @@ export enum EventType {
     CYCLE_SQUAD,
     EXAMINE_START,
     TARGETING_START,
+    TARGETING_CANCEL,
     TARGETING_END,
     TARGETING_MOVE,
+    HOTKEY,
 }
 
 export enum EntityType {
@@ -41,7 +43,8 @@ export enum VisionSource {
 
 export enum TargetingType {
     Examine,
-    Throw,
+    // Throw,
+    Shoot,
 }
 
 export enum InputHandlerType {
@@ -57,6 +60,6 @@ export enum StatName {
 
 export enum AbilityType {
     Camp,
-    Musket,
+    Rifle,
     Dash,
 }

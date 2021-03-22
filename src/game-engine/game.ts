@@ -3,7 +3,8 @@ import Simple from "rot-js/lib/scheduler/simple"
 import * as Bones from '../bones'
 import { Coordinate } from '../game-components'
 import { GameEvent } from './events'
-import { ActorType, InputHandlerType } from '../game-enums/enums'
+import { AbilityType, ActorType, InputHandlerType } from '../game-enums/enums'
+import { Abilities } from '../game-actions'
 
 
 export class Game {
@@ -225,9 +226,14 @@ export class Game {
         this.player_squad[2].name = "Tracy"
 
         for (let i = 0; i < this.player_squad.length; i++) {
-              this.player_squad[i].abilities.push(new Bones.Actions.Ability(Bones.Enums.AbilityType.Musket))
-              this.player_squad[i].abilities.push(new Bones.Actions.Ability(Bones.Enums.AbilityType.Dash))
-              this.player_squad[i].abilities.push(new Bones.Actions.Ability(Bones.Enums.AbilityType.Camp))
+              this.player_squad[i].abilities.push(new Bones.Actions.Abilities.Rifle())
+              this.player_squad[i].abilities.push(new Bones.Actions.Abilities.Ability(Bones.Enums.AbilityType.Dash))
+              this.player_squad[i].abilities.push(new Bones.Actions.Abilities.Ability(Bones.Enums.AbilityType.Camp))
         }
+    }
+
+    getHotKeyActions() : Array<Bones.Actions.Abilities.Ability> {
+        let squaddie = this.getActiveSquadMember()
+        return Bones.Actions.Abilities.getActiveAbilitiesFor(this, squaddie)
     }
 }

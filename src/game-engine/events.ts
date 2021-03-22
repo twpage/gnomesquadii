@@ -10,6 +10,7 @@ export interface IEventData {
     to_xy?: Bones.Coordinate
     errMsg?: string
     targetingType?: TargetingType
+    index?: number
 }
 
 export class GameEvent {
@@ -77,9 +78,13 @@ async function processEvent(game: Bones.Engine.Game, event: GameEvent) : Promise
             // console.log(game.tgt_interface.target_xy, event.eventData.direction_xy)
             Bones.Actions.Targeting.execTargetingMove(game, event.actor, new_target_xy)
             break
+
+        case EventType.TARGETING_CANCEL:
+            Bones.Actions.Targeting.execTargetingCancel(game, event.actor, event)
+            break
     
         case EventType.TARGETING_END:
-            Bones.Actions.Targeting.execTargetingEnd(game, event.actor)
+            Bones.Actions.Targeting.execTargetingEnd(game, event.actor, event)
             break
 
         case EventType.ATTACK:
@@ -171,6 +176,18 @@ export function convertPlayerInputToEvent(game: Bones.Engine.Game, actor: Bones.
 
             break
         
+        case EventType.HOTKEY:
+            let hotkey_index = ir.eventData.index
+            let active_abils = game.getHotKeyActions()
+
+            if (hotkey_index < active_abils.length) {
+                let ability = game.getHotKeyActions()[hotkey_index]
+                intended_event = Bones.Actions.Abilities.execAbilityActivated(game, active_actor, ability)
+            } else {
+                intended_event = new GameEvent(active_actor, EventType.NONE, false, { errMsg: "Invalid hotkey"})
+            }
+            break
+
         case EventType.EXAMINE_START:
             let target_xy = new Bones.Coordinate(0, 0)
             intended_event = new GameEvent(active_actor, EventType.TARGETING_START, false, {to_xy: target_xy, targetingType: TargetingType.Examine})
@@ -186,11 +203,12 @@ export function convertPlayerInputToEvent(game: Bones.Engine.Game, actor: Bones.
         case EventType.FANCY:
         case EventType.EXTRA_FANCY:
         case EventType.TARGETING_END:
-            intended_event = new GameEvent(active_actor, ir.event_type, false)
+        case EventType.TARGETING_CANCEL:
+            intended_event = new GameEvent(active_actor, ir.event_type, false, ir.eventData)
             break
         
         default:
-            intended_event = new GameEvent(active_actor, EventType.NONE, false)
+            intended_event = new GameEvent(active_actor, EventType.NONE, false, ir.eventData)
     }
 
     return intended_event

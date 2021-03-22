@@ -17,6 +17,7 @@ const KEYS_UP = [ROT.KEYS.VK_W, ROT.KEYS.VK_UP]
 const KEYS_DOWN = [ROT.KEYS.VK_S, ROT.KEYS.VK_DOWN]
 const KEYS_CYCLE = [ROT.KEYS.VK_E]
 const KEYS_EXAMIME = [ROT.KEYS.VK_X]
+const KEYS_HOTKEYS = [ROT.KEYS.VK_1, ROT.KEYS.VK_2, ROT.KEYS.VK_3, ROT.KEYS.VK_4]
 
 let activeInputHandlerType : InputHandlerType = InputHandlerType.Core
 export function setActiveInputHandler(handler_type: InputHandlerType) {
@@ -86,6 +87,15 @@ export function handleInput_Core(event: KeyboardEvent) : InputResponse {
             validInput: true, 
             event_type: EventType.EXAMINE_START, 
         }
+    } else if (KEYS_HOTKEYS.indexOf(code) > -1) {
+        let hotkey_index = KEYS_HOTKEYS.indexOf(code)
+        return {
+            validInput: true, 
+            event_type: EventType.HOTKEY, 
+            eventData: {
+                index: hotkey_index
+            }
+        }
     }
 
     return {validInput: false, event_type: EventType.NONE}
@@ -126,6 +136,11 @@ export function handleInput_Targeting(event: KeyboardEvent) : InputResponse {
             }
         }
     } else if (code == ROT.KEYS.VK_ESCAPE) {
+        return {
+            validInput: true, 
+            event_type: EventType.TARGETING_CANCEL, 
+        }
+    } else if (code == ROT.KEYS.VK_SPACE) {
         return {
             validInput: true, 
             event_type: EventType.TARGETING_END, 

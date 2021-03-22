@@ -202,7 +202,7 @@ export class Display {
                             chr = '\u2662'
                         }
                         xy = Bones.Config.infoPanelRect.topleft_xy.add(new Bones.Coordinate(11 + 3 + i, row_number))
-                        this.rotMainDisplay.draw(xy.x, xy.y, chr, ROT.Color.toHex(Bones.Color.slate_65pc), ROT.Color.toHex(Bones.Color.default_bg))
+                        this.rotMainDisplay.draw(xy.x, xy.y, chr, ROT.Color.toHex(Bones.Color.slate_light), ROT.Color.toHex(Bones.Color.default_bg))
                     }
                 } 
             }
@@ -214,10 +214,18 @@ export class Display {
         let row_number = 0
         let chr : string
         let text : string
-        let active_squaddie : Bones.Entities.Actor
-        this.clearRect({ topleft_xy: Bones.Config.footerPanelRect.topleft_xy, size: { width: Bones.Config.footerPanelRect.size.width, height: 1}}, Bones.Color.slate_65pc)
+        
+        // line 1 hotkeys
+        this.clearRect({ topleft_xy: Bones.Config.footerPanelRect.topleft_xy, size: { width: Bones.Config.footerPanelRect.size.width, height: 1}}, Bones.Color.slate_light)
         text = ""
-        for (let i = 0; i < )
+        let active_abils = this.game.getHotKeyActions()
+        for (let hotkey in active_abils) {
+            let ability = active_abils[hotkey]
+            text += `[${Number(hotkey)+1}] ${ability.getName()} `
+        }
+        let xy = Bones.Config.footerPanelRect.topleft_xy.add(new Bones.Coordinate(0, row_number))
+        this.rotMainDisplay.drawText(xy.x, xy.y, colorize(text, Bones.Color.black, Bones.Color.slate_light))
+
         // line 2
         row_number = 1
         if (this.game.tgt_interface) {
