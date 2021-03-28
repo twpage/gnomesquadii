@@ -14,6 +14,7 @@ export const forest_green : ROTColor = [34, 139, 34]
 export const hero_color: ROTColor = [255, 255, 0]
 export const red : ROTColor = [255, 0, 0]
 export const yellow : ROTColor = [255, 255, 0]
+export const red2 : ROTColor = [200, 0, 0]
 
 export const slate_light : ROTColor = [148, 184, 184]
 export const slate_med : ROTColor = [82, 122, 122]
@@ -25,4 +26,5 @@ export const compl_dark : ROTColor = [204, 149, 103]
 
 export const targeting_target = compl_med
 export const targeting_path = compl_light
-export const targeting_bad = red
+export const targeting_bad_target = red
+export const targeting_bad_path = red2

@@ -2,6 +2,7 @@ import * as ROT from 'rot-js'
 import * as Bones from '../bones'
 import { InputResponse } from './input-handlers'
 import { EventType, TargetingType } from '../game-enums/enums'
+import { Ability } from '../game-actions/abilities'
 
 export interface IEventData {
     direction_xy?: Bones.Coordinate
@@ -10,6 +11,7 @@ export interface IEventData {
     to_xy?: Bones.Coordinate
     errMsg?: string
     targetingType?: TargetingType
+    targetingAbility?: Ability
     index?: number
 }
 
@@ -70,7 +72,7 @@ async function processEvent(game: Bones.Engine.Game, event: GameEvent) : Promise
         case EventType.TARGETING_START:
             let start_xy = event.actor.location
             let end_xy = start_xy.add(event.eventData.to_xy)
-            Bones.Actions.Targeting.execTargetingStart(game, event.actor, event.eventData.targetingType, start_xy, end_xy)
+            Bones.Actions.Targeting.execTargetingStart(game, event.actor, start_xy, end_xy, event.eventData.targetingType, event.eventData.targetingAbility)
             break
 
         case EventType.TARGETING_MOVE:
@@ -190,7 +192,11 @@ export function convertPlayerInputToEvent(game: Bones.Engine.Game, actor: Bones.
 
         case EventType.EXAMINE_START:
             let target_xy = new Bones.Coordinate(0, 0)
-            intended_event = new GameEvent(active_actor, EventType.TARGETING_START, false, {to_xy: target_xy, targetingType: TargetingType.Examine})
+            intended_event = new GameEvent(active_actor, EventType.TARGETING_START, false, {
+                to_xy: target_xy,
+                targetingType: TargetingType.Examine,
+                targetingAbility: new Bones.Actions.Abilities.Examine()
+            })
             break
 
         case EventType.TARGETING_MOVE:

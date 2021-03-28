@@ -15,6 +15,13 @@ export class Ability {
     }
 }
 
+export class Examine extends Ability {
+    constructor() {
+        super(Bones.Enums.AbilityType.Examine)
+    }
+
+}
+
 export class Rifle extends Ability {
     constructor() {
         super(Bones.Enums.AbilityType.Rifle)
@@ -46,8 +53,20 @@ export function getActiveAbilitiesFor(game: Bones.Engine.Game, actor: Bones.Enti
 export function execAbilityActivated(game: Bones.Engine.Game, actor: Bones.Entities.Actor, ability: Bones.Actions.Abilities.Ability) : GameEvent {
     switch (ability.abil_type) {
         case AbilityType.Rifle:
-            let target_xy = new Bones.Coordinate(0, 0)
-            return new GameEvent(actor, EventType.TARGETING_START, false, { targetingType: Bones.Enums.TargetingType.Shoot, to_xy: target_xy })
+            if (ability.charges.isEmpty()) {
+                console.log("Reloading!")
+                ability.charges.increment(1)
+                game.display.drawFooterPanel()
+                
+            } else {
+                let target_xy = new Bones.Coordinate(0, 0)
+                return new GameEvent(actor, EventType.TARGETING_START, false, {
+                    targetingType: Bones.Enums.TargetingType.Shoot,
+                    targetingAbility: ability,
+                    to_xy: target_xy 
+                })
+            }
+            break
 
         case AbilityType.Dash:
             console.log("whee") 
