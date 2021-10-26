@@ -151,24 +151,45 @@ export class Display {
 
         this.clearRect(Bones.Config.infoPanelRect, Bones.Color.default_bg)
 
+        let squad_avg_turns = Bones.Actions.Squad.getAverageSquadTurnCount(this.game)
+
         for (let row_number = 0; row_number < Bones.Config.infoPanelRect.size.height; row_number++) {
             if (row_number < known_actors.length) {
                 let actor = known_actors[row_number]
                 
                 // sync indicator
                 if (actor.isPlayerControlled()) {
-                    let actor_relative_timedist = Bones.Actions.Squad.calcActorRelativeTimeDist(this.game, actor)
+                    let char = ''
+
                     xy = Bones.Config.infoPanelRect.topleft_xy.add(new Bones.Coordinate(0, row_number))
+
+                    // show if actor is ahead or behind in turn count
+                    let turncount_diff = actor.turn_count - squad_avg_turns
+                    let turncount_diff_magnitude = Math.abs(turncount_diff)
+
+                    if (turncount_diff_magnitude > (Bones.Config.RELATIVE_TIMEDIST_WARN / 4)) {
+                        if (turncount_diff < 0) {
+                            char = 'v'
+                        } else {
+                            char = '^'
+                        }
+                        this.rotMainDisplay.draw(xy.x, xy.y, char, ROT.Color.toHex(Bones.Color.white), ROT.Color.toHex(Bones.Color.default_bg))
+                    }
+
+
+                    // show warning first, then show signal if actor is in danger of getting out of time/dist sync
+                    let actor_relative_timedist = Bones.Actions.Squad.calcActorRelativeTimeDist(this.game, actor)
+                    
                     if (actor_relative_timedist >= Bones.Config.RELATIVE_TIMEDIST_MAX) {
-                        this.rotMainDisplay.draw(xy.x, xy.y, '!', ROT.Color.toHex(Bones.Color.white), ROT.Color.toHex(Bones.Color.red))
+                        this.rotMainDisplay.draw(xy.x+1, xy.y, '!', ROT.Color.toHex(Bones.Color.white), ROT.Color.toHex(Bones.Color.red))
                     } else if (actor_relative_timedist >= Bones.Config.RELATIVE_TIMEDIST_WARN) {
-                        this.rotMainDisplay.draw(xy.x, xy.y, '!', ROT.Color.toHex(Bones.Color.default_bg), ROT.Color.toHex(Bones.Color.yellow))
+                        this.rotMainDisplay.draw(xy.x+1, xy.y, '!', ROT.Color.toHex(Bones.Color.default_bg), ROT.Color.toHex(Bones.Color.yellow))
                     }
                 }
 
                 // name
-                xy = Bones.Config.infoPanelRect.topleft_xy.add(new Bones.Coordinate(1, row_number))
-                max_width = 10
+                xy = Bones.Config.infoPanelRect.topleft_xy.add(new Bones.Coordinate(2, row_number))
+                max_width = 9
                 let fg_color = Bones.Color.white
                 let bg_color = Bones.Color.default_bg
                 if (actor.isSameAs(this.game.getActiveSquadMember())) {

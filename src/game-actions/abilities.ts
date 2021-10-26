@@ -30,6 +30,15 @@ export class Rifle extends Ability {
         return (this.charges.isEmpty()) ? "Reload" : "Rifle"
     }
 }
+
+export class Camp extends Ability {
+    constructor() {
+        super(Bones.Enums.AbilityType.Camp)
+    }
+    getName() : string {
+        return "Camp"
+    }
+}
 // export interface IActiveAbilities { [hotkey: number] : Bones.Actions.Abilities.Ability }
 
 
@@ -53,11 +62,19 @@ export function getActiveAbilitiesFor(game: Bones.Engine.Game, actor: Bones.Enti
 export function execAbilityActivated(game: Bones.Engine.Game, actor: Bones.Entities.Actor, ability: Bones.Actions.Abilities.Ability) : GameEvent {
     switch (ability.abil_type) {
         case AbilityType.Rifle:
+            if (actor.stamina.isEmpty()) {
+                return new GameEvent(actor, EventType.NONE, false, { errMsg: "Not enough stamina"})
+            }
+
+            actor.stamina.decrement(1)
+            game.display.drawInfoPanel()
+
             if (ability.charges.isEmpty()) {
                 console.log("Reloading!")
                 ability.charges.increment(1)
                 game.display.drawFooterPanel()
-                
+                return new GameEvent(actor, EventType.NONE, true)
+
             } else {
                 let target_xy = new Bones.Coordinate(0, 0)
                 return new GameEvent(actor, EventType.TARGETING_START, false, {
@@ -77,7 +94,7 @@ export function execAbilityActivated(game: Bones.Engine.Game, actor: Bones.Entit
             break
     }
 
-    return new GameEvent(actor, EventType.WAIT, false)
+    return new GameEvent(actor, EventType.NONE, false, {errMsg: "unsupported ability"})
 
 }
 

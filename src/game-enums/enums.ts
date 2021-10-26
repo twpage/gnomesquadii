@@ -64,3 +64,9 @@ export enum AbilityType {
     Rifle,
     Dash,
 }
+
+export enum EventBlockedByTimeDistLockResponse {
+    Allowed,
+    Blocked,
+    NormallyBlockedButPermitted,
+}

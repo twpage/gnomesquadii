@@ -129,33 +129,42 @@ function calcActorRelativeTimeDist_helper(actor: Bones.Entities.Actor, squad_tim
 function dist3d(from_xy: Bones.Coordinate, from_turns: number, to_xy: Bones.Coordinate, to_turns: number) : number {
     let xdiff = (from_xy.x - to_xy.x)
     let ydiff = (from_xy.y - to_xy.y)
-    // let turn_diff = Math.floor((from_turns - to_turns) / 2)
-    let turn_diff = 0
+    let turn_diff = Math.floor((from_turns - to_turns) / 2)
+    // let turn_diff = 0
     
     return Math.sqrt(xdiff*xdiff + ydiff*ydiff + turn_diff*turn_diff)
 }
 
-export function checkForAllowedSquadMemberEvent(game: Bones.Engine.Game, actor: Bones.Entities.Actor, event: GameEvent) : boolean {
+
+export function checkForAllowedSquadMemberEvent(game: Bones.Engine.Game, actor: Bones.Entities.Actor, event: GameEvent) : Bones.Enums.EventBlockedByTimeDistLockResponse {
     // console.log(`checking for allowed: ${actor.name}`)
     if ((event.actor.isPlayerControlled()) && (event.actor.actorType == Bones.Enums.ActorType.HERO) && (event.endsTurn)) {
         // console.log(`is player controlled : ${actor.name}`)
         let actor_relative_timedist = Bones.Actions.Squad.calcActorRelativeTimeDist(game, actor)
         if (actor_relative_timedist >= Bones.Config.RELATIVE_TIMEDIST_MAX) {
             // actor is currently outside of bounds for time-distance, but maybe this move makes it better
-            // TODO: PREDICT
             if (event.event_type == Bones.Enums.EventType.MOVE) {
 
                 let predicted_relative_timedist = calcPredictedActorRelativeTimeDist(game, actor, event.eventData.to_xy)
                 // console.log(`actual: ${actor_relative_timedist} ${actor.location} vs predicted: ${predicted_relative_timedist} ${event.eventData.to_xy}`)
-                return predicted_relative_timedist < actor_relative_timedist
+                if (predicted_relative_timedist < actor_relative_timedist) {
+                    return Bones.Enums.EventBlockedByTimeDistLockResponse.NormallyBlockedButPermitted
+                } else {
+                    return Bones.Enums.EventBlockedByTimeDistLockResponse.Blocked
+                }
             }
             
             // console.log(`${event.actor.name} is blocked from moving too far away`)
-            return false
+            return Bones.Enums.EventBlockedByTimeDistLockResponse.Blocked
         }
     }
 
     // not a player controlled thing
-    return true
+    return Bones.Enums.EventBlockedByTimeDistLockResponse.Allowed
 
+}
+
+export function getAverageSquadTurnCount(game: Bones.Engine.Game) : number {
+    let squad_avg_turns = game.player_squad.map(a => { return a.turn_count}).reduce((a, b) => { return a + b}) / game.player_squad.length
+    return squad_avg_turns
 }

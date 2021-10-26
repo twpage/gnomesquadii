@@ -38,11 +38,18 @@ async function processEvent(game: Bones.Engine.Game, event: GameEvent) : Promise
     console.log(`running event ${Bones.Enums.EventType[event_type]} for ${actor.name} on turn #${actor.turn_count} (Ends Turn: ${event.endsTurn})`)
 
     // see if we can run this
-    let ok_to_proceed = Bones.Actions.Squad.checkForAllowedSquadMemberEvent(game, actor, event)
-    if (!(ok_to_proceed)) {
-        game.addEventToQueue(new GameEvent(event.actor, EventType.NONE, false))
+    let check_event_blocked = Bones.Actions.Squad.checkForAllowedSquadMemberEvent(game, actor, event)
+    if (check_event_blocked == Bones.Enums.EventBlockedByTimeDistLockResponse.Blocked) {
+        game.addEventToQueue(new GameEvent(event.actor, EventType.NONE, false, {errMsg: "Actor is out of sync"}))
         return Promise.resolve(true)
+
+    } else if (check_event_blocked == Bones.Enums.EventBlockedByTimeDistLockResponse.NormallyBlockedButPermitted) {
+        if (!(actor.stamina.isEmpty())) {
+            actor.stamina.decrement(1)
+            game.display.drawInfoPanel()
+        }
     }
+    
     // if ((event.actor.isPlayerControlled()) && (event.actor.actorType == Bones.Enums.ActorType.HERO) && (event.endsTurn)) {
     //     let actor_relative_timedist = Bones.Actions.Squad.calcActorRelativeTimeDist(game, actor)
     //     if (actor_relative_timedist >= Bones.Config.RELATIVE_TIMEDIST_MAX) {
@@ -57,6 +64,10 @@ async function processEvent(game: Bones.Engine.Game, event: GameEvent) : Promise
             // if (actor.isPlayerControlled()) {
             //     console.log("you wait")
             // }
+            if ((actor.stamina.getMaxLevel() > 1) && (!(actor.stamina.isMaxed()))) {
+                actor.stamina.increment(1)
+                game.display.drawInfoPanel()
+            }
             break
 
         case EventType.MOVE:
