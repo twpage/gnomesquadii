@@ -18,20 +18,43 @@ export class Game {
     display : Bones.Display
     cameraOffset : Bones.Coordinate
     tgt_interface : Bones.Actions.Targeting.TargetingInterface
+    base_menu_abilities : Array<Bones.Actions.Abilities.Ability>
+    current_menu_abilities: Array<Bones.Actions.Abilities.Ability>
+    menu_index: number
+    difficulty: number = 1
+    mobs_slain: number = 0
+    messages : Bones.Messages.MessageBuffer
 
     constructor(divElements : Bones.IDisplayDivElementIDs) {
+        this.messages = new Bones.Messages.MessageBuffer(
+            this,
+            Bones.Config.footerPanelRect.size.height,
+            Bones.Config.footerPanelRect.size.width
+        )
         this.display = new Bones.Display(this, divElements)
         this.scheduler = new ROT.Scheduler.Simple()
 
         this.player = new Bones.Entities.PlayerActor(Bones.Definitions.Actors.PLAYER)
         this.architect = new Bones.Entities.Actor(Bones.Definitions.Actors.ARCHITECT)
 
+        this.base_menu_abilities = [
+            // new Bones.Actions.Abilities.Shoot(),
+            new Bones.Actions.Abilities.ButtonMenuAction(),
+            new Bones.Actions.Abilities.Rest(),
+            new Bones.Actions.Abilities.Cycle(),
+            new Bones.Actions.Abilities.ButtonMenuGame(),
+        ]
+        this.current_menu_abilities = []
+        this.menu_index = null
+        
         this.initPlayerSquad()
 
         this.cameraOffset = new Bones.Coordinate(0, 0)
 
-        let first_region = new Bones.Region(Bones.Config.regionSize, 1)
+        // let first_region = new Bones.Region(Bones.Config.regionSize, 1, Bones.LevelGen.simpleRegionGenerator)
+        let first_region = new Bones.Region(Bones.Config.regionSize, this.difficulty, Bones.LevelGen.forestRegionGenerator)
         this.setCurrentRegion(first_region)
+        this.messages.addMessage("Welcome to an experimental 7DRL")
     }
     
     getActiveSquadMember() : Bones.Entities.PlayerActor {
@@ -218,22 +241,38 @@ export class Game {
         this.player_squad = [
             new Bones.Entities.PlayerActor(Bones.Definitions.Actors.HERO),
             new Bones.Entities.PlayerActor(Bones.Definitions.Actors.HERO),
-            new Bones.Entities.PlayerActor(Bones.Definitions.Actors.HERO)
+            new Bones.Entities.PlayerActor(Bones.Definitions.Actors.HERO),
+            new Bones.Entities.PlayerActor(Bones.Definitions.Actors.HERO),
         ]
         this.active_squad_index = 0
-        this.player_squad[0].name = "Griz"
-        this.player_squad[1].name = "DotCom"
-        this.player_squad[2].name = "Tracy"
+        this.player_squad[0].name = "Cassius"
+        this.player_squad[1].name = "Roscoe"
+        this.player_squad[2].name = "Celia"
+        this.player_squad[3].name = "Desmond"
 
         for (let i = 0; i < this.player_squad.length; i++) {
-              this.player_squad[i].abilities.push(new Bones.Actions.Abilities.Rifle())
-              this.player_squad[i].abilities.push(new Bones.Actions.Abilities.Ability(Bones.Enums.AbilityType.Dash))
-              this.player_squad[i].abilities.push(new Bones.Actions.Abilities.Ability(Bones.Enums.AbilityType.Camp))
+              this.player_squad[i].abilities.push(new Bones.Actions.Abilities.Shoot())
+              this.player_squad[i].abilities.push(new Bones.Actions.Abilities.Bullseye())
+            //   this.player_squad[i].abilities.push(new Bones.Actions.Abilities.Ability(Bones.Enums.AbilityType.Dash))
+              this.player_squad[i].abilities.push(new Bones.Actions.Abilities.Ability(Bones.Enums.AbilityType.Rally))
+              
+              let abil_follow = new Bones.Actions.Abilities.Follow()
+              abil_follow.charges.setCurrentLevel(0)
+              this.player_squad[i].abilities.push(abil_follow)
+            //   this.player_squad[i].abilities.push(new Bones.Actions.Abilities.Ability(Bones.Enums.AbilityType.Unfollow))
         }
     }
 
-    getHotKeyActions() : Array<Bones.Actions.Abilities.Ability> {
-        let squaddie = this.getActiveSquadMember()
-        return Bones.Actions.Abilities.getActiveAbilitiesFor(this, squaddie)
+    // getHotKeyActions() : Array<Bones.Actions.Abilities.Ability> {
+    //     let squaddie = this.getActiveSquadMember()
+    //     return Bones.Actions.Abilities.getActiveAbilitiesFor(this, squaddie)
+    // }
+    getCurrentMenuBarAbilities() : Array<Bones.Actions.Abilities.Ability> {
+        if (this.menu_index == null) {
+            // no current menu
+            return this.base_menu_abilities
+        }
+
+        return this.current_menu_abilities
     }
 }

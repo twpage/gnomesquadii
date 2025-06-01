@@ -1,8 +1,9 @@
 import * as ROT from 'rot-js'
 import * as Bones from '../bones'
 import { InputResponse } from './input-handlers'
-import { EventType, TargetingType } from '../game-enums/enums'
+import { AbilityType, EventType, TargetingType } from '../game-enums/enums'
 import { Ability } from '../game-actions/abilities'
+import { Actor } from '../game-entities'
 
 export interface IEventData {
     direction_xy?: Bones.Coordinate
@@ -13,7 +14,15 @@ export interface IEventData {
     targetingType?: TargetingType
     targetingAbility?: Ability
     index?: number
+    following? : boolean
+    // menu?: IMenuInfo
 }
+
+// export interface IMenuInfo {
+//     menuAbilityType : AbilityType
+//     index: number
+//     cycle_direction: number
+// }
 
 export class GameEvent {
     constructor(
@@ -60,18 +69,43 @@ async function processEvent(game: Bones.Engine.Game, event: GameEvent) : Promise
     // }
 
     switch (event_type) {
+        case EventType.RALLY:
+            Bones.Actions.Squad.execRally(game, actor)
+            break
+
+        case EventType.FOLLOW_START:
+            Bones.Actions.Squad.execFollow(game, actor)
+            break
+        
+        case EventType.FOLLOW_STOP:
+            Bones.Actions.Squad.execUnfollow(game, actor)
+            break
+
+        case EventType.FOLLOW_LEADER:
+            let leader = event.eventData.target
+            Bones.Actions.Squad.execFollowLeader(game, actor, leader)
+            break
+
         case EventType.WAIT:
             // if (actor.isPlayerControlled()) {
             //     console.log("you wait")
             // }
-            if ((actor.stamina.getMaxLevel() > 1) && (!(actor.stamina.isMaxed()))) {
-                actor.stamina.increment(1)
-                game.display.drawInfoPanel()
-            }
+            Bones.Actions.Movement.execWait(game, actor)
             break
-
+        
+        // case EventType.MENU_START:
+        //     Bones.
+        case EventType.SWAP:
+            Bones.Actions.Movement.execSwap(game, actor, event.eventData.from_xy, event.eventData.to_xy, event.eventData.target)
+            break
         case EventType.MOVE:
-            Bones.Actions.Movement.execMove(game, actor, event.eventData.from_xy, event.eventData.to_xy)
+            let is_following : boolean
+            if (event.eventData.following) {
+                is_following = true
+            } else {
+                is_following = false
+            }
+            Bones.Actions.Movement.execMove(game, actor, event.eventData.from_xy, event.eventData.to_xy, is_following)
             break
         
         case EventType.CYCLE_SQUAD:
@@ -94,10 +128,12 @@ async function processEvent(game: Bones.Engine.Game, event: GameEvent) : Promise
 
         case EventType.TARGETING_CANCEL:
             Bones.Actions.Targeting.execTargetingCancel(game, event.actor, event)
+            Bones.Actions.Menu.stopMenu(game, event)
             break
     
         case EventType.TARGETING_END:
             Bones.Actions.Targeting.execTargetingEnd(game, event.actor, event)
+            Bones.Actions.Menu.stopMenu(game, event)
             break
 
         case EventType.ATTACK:
@@ -105,14 +141,35 @@ async function processEvent(game: Bones.Engine.Game, event: GameEvent) : Promise
             Bones.Actions.Combat.execAttack(game, actor, event.eventData.from_xy, event.eventData.to_xy, target)
             break
 
+        case EventType.CRIT_SHOT:
+            let crit_target = event.eventData.target
+            Bones.Actions.Combat.execCriticalShot(game, actor, event.eventData.from_xy, event.eventData.to_xy, crit_target)
+            break
+    
         case EventType.GAMETICK:
             Bones.Actions.AI.execGameTick(game, actor)
             break
 
-        case EventType.MENU:
-            console.log("player does something that doesn't take a turn")
+        // case EventType.MENU:
+        //     console.log("player does something that doesn't take a turn")
+        //     break
+
+        case EventType.MENU_START:
+            Bones.Actions.Menu.startMenu(game, event)
             break
 
+        case EventType.MENU_SELECT:
+            Bones.Actions.Menu.selectMenu(game, event)
+            break
+
+        case EventType.MENU_CYCLE:
+            Bones.Actions.Menu.cycleMenu(game, event)
+            break
+
+        case EventType.MENU_STOP:
+            Bones.Actions.Menu.stopMenu(game, event)
+            break
+    
         case EventType.FANCY:
             console.log("This event pauses the game")
             await runFancyAnimation()
@@ -131,7 +188,9 @@ async function processEvent(game: Bones.Engine.Game, event: GameEvent) : Promise
 
         case EventType.NONE:
             if (event.eventData.errMsg) {
-                console.log(event.eventData.errMsg)
+                let msg = event.eventData.errMsg
+                console.log(msg)
+                game.messages.addMessage(msg)
             }
             break
 
@@ -191,10 +250,12 @@ export function convertPlayerInputToEvent(game: Bones.Engine.Game, actor: Bones.
         
         case EventType.HOTKEY:
             let hotkey_index = ir.eventData.index
-            let active_abils = game.getHotKeyActions()
+            // let active_abils = game.getHotKeyActions()
+            let active_abils = game.base_menu_abilities
 
             if (hotkey_index < active_abils.length) {
-                let ability = game.getHotKeyActions()[hotkey_index]
+                // let ability = game.getHotKeyActions()[hotkey_index]
+                let ability = game.base_menu_abilities[hotkey_index]
                 intended_event = Bones.Actions.Abilities.execAbilityActivated(game, active_actor, ability)
             } else {
                 intended_event = new GameEvent(active_actor, EventType.NONE, false, { errMsg: "Invalid hotkey"})
@@ -215,8 +276,15 @@ export function convertPlayerInputToEvent(game: Bones.Engine.Game, actor: Bones.
             break
 
         // stack up these "pass through" events
+        case EventType.SWAP:
+        case EventType.RALLY:
+        case EventType.FOLLOW_START:
+        case EventType.FOLLOW_STOP:
+        case EventType.FOLLOW_LEADER:
         case EventType.CYCLE_SQUAD:
-        case EventType.MENU:
+        case EventType.MENU_SELECT:
+        case EventType.MENU_CYCLE:
+        case EventType.MENU_STOP:
         case EventType.FANCY:
         case EventType.EXTRA_FANCY:
         case EventType.TARGETING_END:

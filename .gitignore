@@ -4,3 +4,6 @@ package.json
 package-lock.json
 # webpack.config.js
 npm-debug.*
+*.xlsx
+7drl2022-thewoods.zip
+itchio-card.png

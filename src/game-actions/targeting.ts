@@ -24,6 +24,8 @@ export function execTargetingCancel(game: Bones.Engine.Game, actor: Bones.Entiti
 
 export function execTargetingEnd(game: Bones.Engine.Game, actor: Bones.Entities.Actor, parent_event: GameEvent) : boolean {
     let resp = isValidPath(game, game.tgt_interface.targetingType, game.tgt_interface.start_xy, game.tgt_interface.target_xy)
+    let region : Bones.Region
+    let target_at : Bones.Entities.Actor
 
     if (resp.valid) {
         switch (game.tgt_interface.associated_ability.abil_type) {
@@ -31,11 +33,23 @@ export function execTargetingEnd(game: Bones.Engine.Game, actor: Bones.Entities.
                 console.log("hrmmm")
                 break
             
-            case Bones.Enums.AbilityType.Rifle:
-                let region = game.current_region
-                let target_at = region.actors.getAt(game.tgt_interface.target_xy)
+            case Bones.Enums.AbilityType.Shoot:
+                region = game.current_region
+                target_at = region.actors.getAt(game.tgt_interface.target_xy)
                 game.tgt_interface.associated_ability.charges.decrement(1)
                 game.addEventToQueue(new GameEvent(actor, EventType.ATTACK, true, {
+                    from_xy: game.tgt_interface.start_xy,
+                    to_xy: game.tgt_interface.target_xy,
+                    target: target_at
+                }))
+                game.display.drawFooterPanel()
+                break
+
+            case Bones.Enums.AbilityType.Bullseye:
+                region = game.current_region
+                target_at = region.actors.getAt(game.tgt_interface.target_xy)
+                game.tgt_interface.associated_ability.charges.decrement(1)
+                game.addEventToQueue(new GameEvent(actor, EventType.CRIT_SHOT, true, {
                     from_xy: game.tgt_interface.start_xy,
                     to_xy: game.tgt_interface.target_xy,
                     target: target_at
@@ -69,6 +83,8 @@ export function isValidPath(game: Bones.Engine.Game, tgt_type: TargetingType, st
     switch (tgt_type) {
         case TargetingType.Shoot:
             return isValidPath_Shoot(game, start_xy, target_xy)
+        case TargetingType.Bullseye:
+            return isValidPath_Shoot(game, start_xy, target_xy)
         default:
             return isValidPath_Examine(game, start_xy, target_xy)
     }
@@ -84,6 +100,19 @@ export function isValidPath_Shoot(game: Bones.Engine.Game, start_xy: Bones.Coord
     // first see if the path is valid
     let path_resp = isValidPath_UnblockedStraightLine(game, start_xy, target_xy)
     if (!(path_resp.valid)) { return path_resp }
+
+    let max_path = Bones.Config.MAX_TARGET_PATH
+
+    if (path_resp.path.length >= max_path) {
+        // console.log("length too long")
+        let path2 = path_resp.path.concat([])
+        let last_part = path2.pop()
+        // let end_of_path = path2.
+        return {
+            valid: false,
+            path: path_resp.path.slice(0, max_path).concat([last_part])
+        }
+    }
 
     // then see if there's a monster at the end
     let region = game.current_region
@@ -156,7 +185,7 @@ export class TargetingInterface{
         if (this.targetingType == TargetingType.Examine) {
             this.highlights.setAt(this.target_xy, Bones.Color.targeting_target)
 
-        } else if (this.targetingType == TargetingType.Shoot) {
+        } else if ((this.targetingType == TargetingType.Shoot) || (this.targetingType == TargetingType.Bullseye)) {
             let resp = isValidPath(this.game, this.targetingType, this.start_xy, this.target_xy)
 
             // if (!(resp.valid)) {
@@ -187,4 +216,26 @@ export class TargetingInterface{
         this.highlights.clearAll()
     }
     
+}
+
+export function guessStartingTarget(game: Bones.Engine.Game, actor: Bones.Entities.Actor) : Bones.Coordinate {
+    let potential_targets  = actor.knowledge.getAllCoordinatesAndEntities().filter(item => { return (!(item.entity.isPlayerControlled())) })
+    console.log(potential_targets)
+        // find the closest one 
+    let targets : Bones.Entities.Actor[] = potential_targets.sort((a, b) => {
+        let dist_me_to_a = Bones.Utils.dist2d(actor.location, a.xy)
+        let dist_me_to_b = Bones.Utils.dist2d(actor.location, b.xy)
+        if (dist_me_to_a == dist_me_to_b) {
+            return a.entity.id - b.entity.id
+        } else {
+            return dist_me_to_a - dist_me_to_b
+        }
+    }).map(item => { return item.entity })
+
+    if (targets.length == 0) {
+        // if we don't see anyone, then return 0,0
+        return new Bones.Coordinate(0, 0)
+    } else {
+        return targets[0].location.subtract(actor.location)
+    }
 }

@@ -32,12 +32,32 @@ export const ARCHITECT : Bones.Entities.IActorDefinition  = {
     hp_num: 1,
 }
 
-export const MOB : Bones.Entities.IActorDefinition  = {
+export const SPIDER : Bones.Entities.IActorDefinition  = {
     entityType: Bones.Enums.EntityType.Actor,
     actorType: ActorType.MOB,
-    name: 'Mob',
-    code: 'x',
+    name: 'Spider',
+    code: 'SPIDER',
     color: Bones.Color.white,
     bg_color: null,
     hp_num: 1,
+}
+
+export const BRUTE : Bones.Entities.IActorDefinition  = {
+    entityType: Bones.Enums.EntityType.Actor,
+    actorType: ActorType.MOB,
+    name: 'Brute',
+    code: 'BRUTE',
+    color: Bones.Color.white,
+    bg_color: null,
+    hp_num: 3,
+}
+
+export const BONES : Bones.Entities.IActorDefinition  = {
+    entityType: Bones.Enums.EntityType.Actor,
+    actorType: ActorType.MOB,
+    name: 'Bones',
+    code: 'BONES',
+    color: Bones.Color.white,
+    bg_color: null,
+    hp_num: 2,
 }

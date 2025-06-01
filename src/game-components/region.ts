@@ -6,6 +6,12 @@ import { CoordinateArea } from './coordinate-area'
 import { GridOfEntities } from './grid'
 import { ISize } from './utils'
 
+interface INavigationTileList {
+    [id : string] : Array<Bones.Coordinate>
+}
+
+interface ILevelGeneratorFunction { (r: Region, d: number) : boolean }
+
 export class Region {
     public id: number
     public terrain: GridOfEntities<Terrain>
@@ -13,14 +19,22 @@ export class Region {
     // public highlights: GridOfEntities<Bones.ROTColor>
 
     public start_xy : Bones.Coordinate
+    navigation_tiles: INavigationTileList
 
-    constructor(public size: ISize, public depth: number) {
+    constructor(public size: ISize, public depth: number, level_generator_fn: ILevelGeneratorFunction) {
         this.id = Bones.Utils.generateID()
         this.terrain = new GridOfEntities<Terrain>()
         this.actors = new GridOfEntities<Actor>()
         // this.highlights = new GridOfEntities<Bones.ROTColor>()
 
-        regionGenerator(this)
+        this.navigation_tiles = {}
+        this.navigation_tiles[Bones.Enums.LevelNavigationType.Walk] = []
+        this.navigation_tiles[Bones.Enums.LevelNavigationType.Fly] = []
+
+        // regionGenerator(this)
+        level_generator_fn(this, depth)
+
+        this.updateNavigation()
     }
 
     isValid(xy: Bones.Coordinate) : boolean {
@@ -67,53 +81,26 @@ export class Region {
 
         return spots_xys.getCoordinates()
     }
-}
 
-function regionGenerator(region: Region) {
-    // generate terrain
-    // keep track of safe terrain while we generate
-    let safe_xys : Bones.Coordinate[] = []
+    updateNavigation() {
+        let t : Bones.Entities.Terrain
+        let xy : Bones.Coordinate
 
-    let callback = (x: number, y: number, value: number) => {
-        let xy = new Bones.Coordinate(x, y)
-        let terrain : Bones.Entities.Terrain
-        if (value == 1) {
-            terrain = new Bones.Entities.Terrain(Bones.Definitions.Terrain.WALL)
-        } else {
-            terrain = new Bones.Entities.Terrain(Bones.Definitions.Terrain.FLOOR)
-            safe_xys.push(xy)
-        }
+        for (let x = 1; x < (this.size.width - 1); x++) {
+            for (let y = 1; y < (this.size.height - 1); y++) {
+                xy = new Bones.Coordinate(x, y)
+                t = this.terrain.getAt(xy)
 
-        region.terrain.setAt(xy, terrain)
-    }
-    let d = new ROT.Map.Digger(region.size.width, region.size.height)
-    d.create(callback)
+                if (!(t.blocksWalking)) {
+                    this.navigation_tiles[Bones.Enums.LevelNavigationType.Walk].push(xy)
+                }
 
-    let doors_callback = (x: number, y: number) => {
-        let xy = new Bones.Coordinate(x, y)
-        let u = ROT.RNG.getUniform()
-        if (u < 0.5) {
-            region.terrain.removeAt(xy)
-            region.terrain.setAt(xy, new Bones.Entities.Terrain(Bones.Definitions.Terrain.DOOR_CLOSED))
+                if (!(t.blocksFlying)) {
+                    this.navigation_tiles[Bones.Enums.LevelNavigationType.Fly].push(xy)
+                }
+            }
         }
     }
 
-    let rooms = d.getRooms()
-    for (let room of rooms) {
-        room.getDoors(doors_callback)
-    }
-    // shuffle our safe spaces first
-    safe_xys = ROT.RNG.shuffle(safe_xys)
-
-    // set a safe spot for the player
-    region.start_xy = safe_xys.pop()
-
-    // add some mobs
-    for (let i = 0; i < 2; i++) {
-        let mob = new Bones.Entities.Actor(Bones.Definitions.Actors.MOB)
-        let safe_xy = safe_xys.pop()
-        region.actors.setAt(safe_xy, mob)
-    }
-
-    return true
 }
+

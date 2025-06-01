@@ -5,6 +5,8 @@ import { Coordinate } from "./bones";
 //TODO: fix weird camera issue when both are even (probably missing a -1)
 export const gameplaySize : ISize = { width: 30, height: 30 } 
 export const regionSize : ISize = { width: 45, height: 45 }
+export const TILE_EXPANSION : number = 1.25
+export const BASE_TILE_SIZE : number = 16
 
 export const gameplayPanelRect : IRect = { 
     size: gameplaySize, 
@@ -36,3 +38,5 @@ export const fullWindowRect : IRect = {
 
 export const RELATIVE_TIMEDIST_WARN = 12
 export const RELATIVE_TIMEDIST_MAX = 15
+export const MAX_GRID_SIZE = 1024
+export const MAX_TARGET_PATH = 8

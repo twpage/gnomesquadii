@@ -18,10 +18,20 @@ const KEYS_DOWN = [ROT.KEYS.VK_S, ROT.KEYS.VK_DOWN]
 const KEYS_CYCLE = [ROT.KEYS.VK_E]
 const KEYS_EXAMIME = [ROT.KEYS.VK_X]
 const KEYS_HOTKEYS = [ROT.KEYS.VK_1, ROT.KEYS.VK_2, ROT.KEYS.VK_3, ROT.KEYS.VK_4]
+//ACTION	WAIT	CYCLE	MENU
+//X	A	B	Y
+const KEYS_MENU_CONFIRM = [ROT.KEYS.VK_1]
+const KEYS_MENU_CANCEL = [ROT.KEYS.VK_2]
+const KEYS_MENU_NEXT = [ROT.KEYS.VK_3]
+const KEYS_MENU_PREV = [ROT.KEYS.VK_4]
 
 let activeInputHandlerType : InputHandlerType = InputHandlerType.Core
 export function setActiveInputHandler(handler_type: InputHandlerType) {
     activeInputHandlerType = handler_type
+}
+
+export function getActiveInputHandler() : InputHandlerType {
+    return activeInputHandlerType
 }
 
 export function handleInput(event: KeyboardEvent) : InputResponse {
@@ -29,6 +39,9 @@ export function handleInput(event: KeyboardEvent) : InputResponse {
         case InputHandlerType.Targeting:
             return handleInput_Targeting(event)
 
+        case InputHandlerType.Menu:
+            return handleInput_Menu(event)
+    
         default:
             return handleInput_Core(event)
     }
@@ -43,8 +56,8 @@ export function handleInput_Core(event: KeyboardEvent) : InputResponse {
         return {validInput: true, event_type: EventType.FANCY}
     } else if (code == ROT.KEYS.VK_G) {
         return {validInput: true, event_type: EventType.EXTRA_FANCY}
-    } else if (code == ROT.KEYS.VK_Q) {
-        return {validInput: true, event_type: EventType.MENU }
+    // } else if (code == ROT.KEYS.VK_Q) {
+    //     return {validInput: true, event_type: EventType.MENU }
     } else if (KEYS_LEFT.indexOf(code) > -1) {
         return {
             validInput: true, 
@@ -100,7 +113,40 @@ export function handleInput_Core(event: KeyboardEvent) : InputResponse {
 
     return {validInput: false, event_type: EventType.NONE}
 }
+export function handleInput_Menu(event: KeyboardEvent): InputResponse {
+    let code = event.keyCode
+    if (KEYS_LEFT.concat(KEYS_UP, KEYS_MENU_PREV).indexOf(code) > -1) {
+        return {
+            validInput: true,
+            event_type: EventType.MENU_CYCLE,
+            eventData: {
+                direction_xy: Directions.LEFT
+            }
+        }
+    } else if (KEYS_RIGHT.concat(KEYS_DOWN, KEYS_MENU_NEXT).indexOf(code) > -1) {
+        return {
+            validInput: true,
+            event_type: EventType.MENU_CYCLE,
+            eventData: {
+                direction_xy: Directions.RIGHT
+            }
+        }
+    } else if (KEYS_MENU_CONFIRM.concat([ROT.KEYS.VK_SPACE]).indexOf(code) > -1) {
 
+        return {
+            validInput: true,
+            event_type: EventType.MENU_SELECT,
+        }
+    } else if (KEYS_CYCLE.concat(KEYS_MENU_CANCEL, [ROT.KEYS.VK_ESCAPE]).indexOf(code) > -1) {
+        return {
+            validInput: true,
+            event_type: EventType.MENU_STOP,
+        }
+    }
+
+
+
+}
 export function handleInput_Targeting(event: KeyboardEvent) : InputResponse {
     let code = event.keyCode
     if (KEYS_LEFT.indexOf(code) > -1) {
@@ -135,12 +181,14 @@ export function handleInput_Targeting(event: KeyboardEvent) : InputResponse {
                 direction_xy: Directions.DOWN
             }
         }
-    } else if (code == ROT.KEYS.VK_ESCAPE) {
+    // } else if (code == ROT.KEYS.VK_ESCAPE) {
+    } else if (KEYS_MENU_CANCEL.concat([ROT.KEYS.VK_ESCAPE]).indexOf(code) > -1) {
         return {
             validInput: true, 
             event_type: EventType.TARGETING_CANCEL, 
         }
-    } else if (code == ROT.KEYS.VK_SPACE) {
+    // } else if (code == ROT.KEYS.VK_SPACE) {
+    } else if (KEYS_MENU_CONFIRM.concat([ROT.KEYS.VK_SPACE]).indexOf(code) > -1) {
         return {
             validInput: true, 
             event_type: EventType.TARGETING_END, 

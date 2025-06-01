@@ -17,6 +17,7 @@ export class Actor extends Entity implements IActorDefinition {
     stamina : Bones.Stat
     lastStepOffset : Bones.Coordinate
     abilities : Array<Bones.Actions.Abilities.Ability>
+    pathmap : Bones.Engine.Pathmap.Pathmap
 
     constructor (actor_def : IActorDefinition) {
         super(actor_def)
@@ -60,7 +61,22 @@ export class Actor extends Entity implements IActorDefinition {
     public clearKnowledge() {
         this.knowledge = new GridOfEntities<Bones.Entities.Actor>()
     }
-    
+    public getAbilityOfType(abil_type) : Bones.Actions.Abilities.Ability {
+        let abil_list = this.abilities.filter((value, index, array) => { return value.abil_type == abil_type })
+        if (abil_list.length == 0) {
+            return null
+        } else {
+            return abil_list[0]
+        }
+    }    
+    public hasKnowledgeOf(seeking_entity: Bones.Entities.Entity) : boolean {
+        for (let known_entity of this.knowledge.getAllEntities()) {
+            if (known_entity.isSameAs(seeking_entity)) {
+                return true
+            }
+        }
+        return false
+    }
 }
 
 

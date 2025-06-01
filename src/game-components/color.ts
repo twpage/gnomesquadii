@@ -28,3 +28,6 @@ export const targeting_target = compl_med
 export const targeting_path = compl_light
 export const targeting_bad_target = red
 export const targeting_bad_path = red2
+
+export const orange : ROTColor = [255, 87, 51]
+export const blue : ROTColor = [0, 89, 255]

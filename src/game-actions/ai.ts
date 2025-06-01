@@ -48,7 +48,9 @@ export function getEventOnMonsterTurn(game: Bones.Engine.Game, actor: Bones.Enti
                 let region = game.current_region
                 let passable_fn = (x: number, y: number) => {
                     let xy = new Bones.Coordinate(x, y)
-                    return region.isValid(xy) && Bones.Actions.Movement.isValidMove(game, actor, xy)
+                    let mob_at = region.actors.getAt(xy)
+                    let impassible_mob_at = ((mob_at) && (!(mob_at.isSameAs(actor))))
+                    return region.isValid(xy) && Bones.Actions.Movement.isValidMove(game, actor, xy) && (!(impassible_mob_at))
                 }
 
                 let path_taken_xys : Bones.Coordinate[] =  []
@@ -77,18 +79,56 @@ export function execGameTick(game: Bones.Engine.Game, actor: Bones.Entities.Acto
     let region = game.current_region
     
     // are the monsters all gone?
-    let found_mobs = game.current_region.actors.getAllEntities().filter((mob) => { return mob.actorType == ActorType.MOB })
-    if (found_mobs.length == 0) {
+    // let found_mobs = game.current_region.actors.getAllEntities().filter((mob) => { return mob.actorType == ActorType.MOB })
+    // if (found_mobs.length == 0) {
+    
+    // every 200 turns, increase difficulty
+    if (ROT.Util.mod(actor.turn_count, 100) == 0) {
+        game.display.drawFooterPanel()
+        game.difficulty += 1
+    }
+
+    if (ROT.Util.mod(actor.turn_count, 50) == 0) {
         // make some more
         let safe_xys = ROT.RNG.shuffle(region.getWalkableTerrainWithoutActors())
         let used_xys : Bones.Coordinate[] = []
 
-        for (let i = 0; i < 2; i++) {
-            let mob = new Bones.Entities.Actor(Bones.Definitions.Actors.MOB)
-            let safe_xy = safe_xys.pop()
-            region.actors.setAt(safe_xy, mob)
-            game.scheduler.add(mob, true) // need to add to scheduler manually since we already started the region
-            used_xys.push(safe_xy)
+        // game.difficulty += 1
+
+        for (let squad_no = 0; squad_no < 2; squad_no++) {
+
+            console.log(`mob squad number ${squad_no+1}`)
+            let center_xy : Bones.Coordinate
+            while (true) {
+                center_xy = ROT.RNG.getItem(safe_xys)
+                // make sure we didnt magically appear next to players
+                let too_close = false
+                for (let squaddie of game.player_squad) {
+                    let d = Bones.Utils.dist2d(squaddie.location, center_xy)
+                    if (d < 10) { 
+                        too_close = true
+                        break
+                    }
+                }
+                if (!(too_close)) {
+                    break
+                }
+                // if (Bones.Utils.dist2d(region.start_xy, center_xy) >= 10) {
+                //     break
+            } 
+            
+            let mob_squad = Bones.LevelGen.createMobSquad(game.difficulty)
+            let mob_xys = [center_xy].concat(region.getSafeSpotsCloseTo(center_xy, mob_squad.length - 1))
+            for (let m = 0; m < mob_squad.length; m++) {
+                let mob = mob_squad[m]
+                let xy = mob_xys[m]
+                region.actors.setAt(xy, mob)
+                game.scheduler.add(mob, true) // need to add to scheduler manually since we already started the region
+                used_xys.push(xy)
+    
+                console.log(`landing ${mob.name} at ${xy}`)
+            }
+
         }
         game.display.drawList(used_xys)
     }
