@@ -1,31 +1,15 @@
-# What Is This
+# The Woods (2022 7-Day Roguelike Challenge Entry)
 
-A slightly "less than bare bones" engine written for [rot.js](https://ondras.github.io/rot.js/hp/), the ~~JavaScript~~ TypeScript roguelike toolkit. It is not really a full-blown engine on it's own (I don't believe in writing roguelike engines), rather it is meant to be used as a starting point for other games. It has enough of the underlying structures (grids, entities, events, etc.) without making judgements on gameplay or game style. It uses an event queue and Promises to allow for animations and event chaining within the classic roguelike turn-based environment.
+![itchio-card](https://github.com/user-attachments/assets/bb1c2ce3-6cea-43be-ab5c-e88b1a0fd130)
 
-"Basic Bones" includes:
+[Play on Itch.io](http://blog.heroicfisticuffs.com/the-woods-2022-7drl-entry/)
 
-* Grid/Coordinate/Entities class that I have built up over dozens of games
-* Event queue easily allows for events can create other events (e.g. explosions or projectiles that do damage)
-* Using promises/Await to handle player (keyboard) input and animated events
-* ROT.js display, with field of view and player memory
-* Support for *scrolling* views (e.g. viewable window is smaller than the entire gameplay map)
-* Dumb AI - enemies will follow you if they can see you, then attack. They will stand still otherwise.
-* 'Architect' construct that runs a 'game tick' event each turn (for simulating environmental effects)
-    * Placeholder 'game tick' event will respawn monsters when they are all dead, and resurrect the player if necessary
-* Basic Input:
-    * WASD or Arrow Keys move
-    * SPACE waits
-    * Q runs a fake 'menu' command that does not use up the player's turn
-    * F runs a timed fake 'animation'
-    * Q uses the event queue to run two timed animations
+[How to Play](http://blog.heroicfisticuffs.com/the-woods-2022-7drl-entry/)
 
-"Basic Bones" does *not* include:
+My submission for the [2022 7-Day Roguelike Challenge](https://itch.io/jam/7drl-challenge-2022). *The Woods* is an experimental roguelike with traditional mechanics combined with squad-based gameplay. Since moving each squad member one step at a time would be extremely annoying, I came up with a dynamic system of "squadness" that gives players plenty of leeway, but forces squad members to stay within a given "time-adjusted" (turn-adjusted, really) distance. This allows players to run down a particular monster or tricky situation without having to worry about cycling through four or five units between every decision.
 
-* Any fancy level generation (this uses the ROT.js Digger algorithm)
-* Any fancy monster AI
-* Doors
-* Real Combat (one hit and you die)
-* Targeting or multiple input handlers (yet..)
+Based on my existing ["not an engine" basic bones](https://github.com/twpage/rotjs-basic-bones) codebase. Significantly overhauled to handle the squad-based play.
+
 
 # See Also
 
