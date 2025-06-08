@@ -2,7 +2,7 @@
 
 ![itchio-card](https://github.com/user-attachments/assets/bb1c2ce3-6cea-43be-ab5c-e88b1a0fd130)
 
-[Play on Itch.io](http://blog.heroicfisticuffs.com/the-woods-2022-7drl-entry/)
+[Play on Itch.io](https://heroicfisticuffs.itch.io/the-woods)
 
 [How to Play](http://blog.heroicfisticuffs.com/the-woods-2022-7drl-entry/)
 
